@@ -1,0 +1,68 @@
+<html>
+	<head>
+		<meta charset="utf-8">
+		<script>
+			var mimeType_audio = "audio/mp4";
+			var codecs_audio = "mp4a.40.2";
+			var mimeCodec_audio = mimeType_audio + ';codecs = "' + codecs_audio + '"';
+			
+			var mediaSource = new MediaSource();
+			var sourceBuffer_audio;
+			var segNum = 1;
+			var maxSegNum = 100;
+
+			function startup() {
+					mediaSource.addEventListener("webkitsourceopen", sourceOpen, false);
+					mediaSource.addEventListener('sourceopen', sourceOpen, false);
+					video = document.querySelector('audio');
+					video.src = URL.createObjectURL(mediaSource);
+			}
+
+			function sourceOpen(e) {
+				sourceBuffer_audio = mediaSource.addSourceBuffer(mimeCodec_audio);
+				
+				fetch("audios/output/audio/und/mp4a.40.2/init.mp4", function(buf) {
+					sourceBuffer_audio.appendBuffer(buf);
+				});
+
+				sourceBuffer_audio.addEventListener('updateend', loadSegment);
+			};
+
+			function loadSegment() {
+				if(segNum < maxSegNum) {
+					getAudioSegment(segNum);
+					segNum++;
+				}
+			}
+			
+			function getAudioSegment(segNum) {
+				fetch("audios/output/audio/und/mp4a.40.2/seg-" + segNum + ".m4s", function(buf) {
+				//fetch("http://localhost:8888/mp3/" + segNum, function(buf) {
+					console.log("mp4/output/audio/und/mp4a.40.2/seg-" + segNum + ".m4s");
+					sourceBuffer_audio.appendBuffer(buf);
+				});
+
+			}
+
+			function fetch(url, cb) {
+				console.log(url);
+				var xhr = new XMLHttpRequest;
+				xhr.open('get', url);
+				xhr.responseType = 'arraybuffer';
+				xhr.onload = function() {
+					cb(xhr.response);
+				};
+				xhr.send();
+			};
+
+			window.onload = function() {
+				startup();
+			}
+		</script>
+	</head>
+
+	<body>
+		<audio controls="" width="100%" height="500px"></audio>
+	</body>
+
+</html>
